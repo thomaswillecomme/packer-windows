@@ -12,7 +12,7 @@
 $RunningAsAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
 if ($RunningAsAdmin)
 {
-
+    New-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update' -name 'AUOptions' -value '4' -propertyType "DWord" -force
 	$Updates = (New-Object -ComObject "Microsoft.Update.AutoUpdate").Settings
 
 	if ($Updates.ReadOnly -eq $True) { Write-Error "Cannot update Windows Update settings due to GPO restrictions." }
@@ -24,7 +24,7 @@ if ($RunningAsAdmin)
 		Write-Output "Automatic Windows Updates disabled."
 	}
 }
-
-else 
+else
 {	Write-Warning "Must be executed in Administrator level shell."
-	Write-Warning "Script Cancelled!" } 
+	Write-Warning "Script Cancelled!"
+}

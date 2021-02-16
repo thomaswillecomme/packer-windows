@@ -1,7 +1,4 @@
-if not exist "C:\Windows\Temp\7z920-x64.msi" (
-    powershell -Command "(New-Object System.Net.WebClient).DownloadFile('http://www.7-zip.org/a/7z920-x64.msi', 'C:\Windows\Temp\7z920-x64.msi')" <NUL
-)
-msiexec /qb /i C:\Windows\Temp\7z920-x64.msi
+powershell -Command "choco install 7zip.install -y"
 
 if "%PACKER_BUILDER_TYPE%" equ "vmware-iso" goto :vmware
 if "%PACKER_BUILDER_TYPE%" equ "virtualbox-iso" goto :virtualbox
@@ -9,29 +6,26 @@ if "%PACKER_BUILDER_TYPE%" equ "parallels-iso" goto :parallels
 goto :done
 
 :vmware
-
 if exist "C:\Users\vagrant\windows.iso" (
     move /Y C:\Users\vagrant\windows.iso C:\Windows\Temp
 )
-
 if not exist "C:\Windows\Temp\windows.iso" (
-    powershell -Command "(New-Object System.Net.WebClient).DownloadFile('http://softwareupdate.vmware.com/cds/vmw-desktop/ws/12.0.0/2985596/windows/packages/tools-windows.tar', 'C:\Windows\Temp\vmware-tools.tar')" <NUL
-    cmd /c ""C:\Program Files\7-Zip\7z.exe" x C:\Windows\Temp\vmware-tools.tar -oC:\Windows\Temp"
-    FOR /r "C:\Windows\Temp" %%a in (VMware-tools-windows-*.iso) DO REN "%%~a" "windows.iso"
-    rd /S /Q "C:\Program Files (x86)\VMWare"
+   powershell -Command "choco install vmware-tools -y"
+) else (
+    cmd /c ""C:\Program Files\7-Zip\7z.exe" x "C:\Windows\Temp\windows.iso" -oC:\Windows\Temp\VMWare"
+    cmd /c C:\Windows\Temp\VMWare\setup.exe /S /v"/qn REBOOT=R\"
 )
-
-cmd /c ""C:\Program Files\7-Zip\7z.exe" x "C:\Windows\Temp\windows.iso" -oC:\Windows\Temp\VMWare"
-cmd /c C:\Windows\Temp\VMWare\setup.exe /S /v"/qn REBOOT=R\"
-
 goto :done
 
 :virtualbox
-
-move /Y C:\Users\vagrant\VBoxGuestAdditions.iso C:\Windows\Temp
-cmd /c ""C:\Program Files\7-Zip\7z.exe" x C:\Windows\Temp\VBoxGuestAdditions.iso -oC:\Windows\Temp\virtualbox"
-cmd /c for %%i in (C:\Windows\Temp\virtualbox\cert\vbox*.cer) do C:\Windows\Temp\virtualbox\cert\VBoxCertUtil add-trusted-publisher %%i --root %%i
-cmd /c C:\Windows\Temp\virtualbox\VBoxWindowsAdditions.exe /S
+if not exist "C:\Users\vagrant\VBoxGuestAdditions.iso" (
+   powershell -Command "choco install virtualbox-guest-additions-guest.install -y"
+) else (
+    move /Y C:\Users\vagrant\VBoxGuestAdditions.iso C:\Windows\Temp
+    cmd /c ""C:\Program Files\7-Zip\7z.exe" x C:\Windows\Temp\VBoxGuestAdditions.iso -oC:\Windows\Temp\virtualbox"
+    for %%i in (C:\Windows\Temp\virtualbox\cert\vbox*.cer) do C:\Windows\Temp\virtualbox\cert\VBoxCertUtil add-trusted-publisher %%i --root %%i
+    cmd /c C:\Windows\Temp\virtualbox\VBoxWindowsAdditions.exe /S
+)
 goto :done
 
 :parallels
@@ -43,4 +37,4 @@ if exist "C:\Users\vagrant\prl-tools-win.iso" (
 )
 
 :done
-msiexec /qb /x C:\Windows\Temp\7z920-x64.msi
+powershell -Command "choco uninstall 7zip.install -y"
